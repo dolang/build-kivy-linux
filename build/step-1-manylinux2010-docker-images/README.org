@@ -1,0 +1,32 @@
+# -*- org-confirm-babel-evaluate: nil; -*-
+#+STARTUP: indent
+
+* Build manylinux2010 docker images
+This should be straight-forward, there's already a build script in the
+repository's master branch.  Just run:
+
+: ~/dev1/manylinux2010/build-images.sh
+
+*Note:* that script has to modify a Dockerfile from the repository,
+you may want to reset those changes afterwards.  The script itself
+contains an explanation.
+
+* If you're new to Docker...
+- It's probably best to familiarise yourself with Docker beforehand
+  and do the [[https://docs.docker.com/get-started/][tutorials]], they're quite good.
+- However, if you're just interested in the produced manylinux2010
+  images, the following two commands are an easy way to get some
+  status information (the second may take a while):
+  #+BEGIN_SRC sh  :results drawer
+    docker image ls
+  #+END_SRC
+
+  #+BEGIN_SRC sh  :results drawer
+    # docker container ls -as
+    # or short:
+    docker ps -as
+  #+END_SRC
+
+- To free space after builds, you can remove obsolete images with
+  ~docker image rm <name-or-id>~ and containers with ~docker rm
+  <name-or-id>~.  Tab-completion is supported, too.

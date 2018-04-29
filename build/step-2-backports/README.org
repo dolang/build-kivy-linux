@@ -1,0 +1,11 @@
+# -*- org-confirm-babel-evaluate: nil; -*-
+#+STARTUP: indent
+
+* TODO Backports
+- *WIP*
+- I'll need to derive proper scripts from my notes so you'll be able
+  to build the packages from source RPMs (SRPM) yourself.
+- In the meantime, I've put the RPMs I've compiled on my own machine
+  into the expected directory. (Insert warning about random dude's
+  binaries here.)
+- Head straight to step 3.  /Do not pass Go. Do not collect $200./

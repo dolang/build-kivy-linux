@@ -1,0 +1,96 @@
+# -*- org-confirm-babel-evaluate: nil; -*-
+
+* Basics
+  - assuming you have a fresh installation of a CentOS 7 VM
+  - the normal account should have sudo rights; if not do:
+    #+BEGIN_EXAMPLE
+      $ su root
+      # usermod -a -G wheel $USER
+    #+END_EXAMPLE
+    - relog (i.e. log out, log in again)
+    
+  - update the system: ~sudo yum -y upgrade~
+  - restart
+  - basic dev tools: ~sudo yum groupinstall -y 'Development Tools'~
+  - editors: ~sudo yum install -y emacs vim~
+    - if you're going to use Emacs, customise the configuration as
+      explained in the [[../README.md][main README]] now (see "... add some generally
+      useful defaults ..."), then restart Emacs.
+    - afterwards, reopen this file in Emacs (~C-x C-f ...~)
+      - the first time you do this with a comment like the one at the
+        top you'll get a security warning.  press "!" to silence that.
+
+** Virtualbox guest additions:
+   - insert guest additions ISO
+   - tangle this (~C-c C-v C-t~):
+     #+BEGIN_SRC sh  :tangle guest-additions.sh
+       #!/bin/bash
+       set -e -x
+       sudo yum install -y kernel-devel-3.10.0-693.21.1.el7.x86_64
+       pushd /run/media/$USER/*
+       sudo ./VBoxLinuxAdditions.run
+       popd
+     #+END_SRC
+     - run with ~bash guest-additions.sh~
+     - note:
+       - kernel-devel-* might be a different version now from when this
+         was written; if so, the script will tell you what you have to
+         install instead
+       - new kernels and new Virtualbox versions require a fresh
+	 installation of the guest additions
+
+* Docker
+  - install & start (tangle, then run)
+    #+BEGIN_SRC sh  :tangle install-docker-ce.sh
+      #!/bin/bash
+      set -e -x
+      sudo yum-config-manager --add-repo \
+          https://download.docker.com/linux/centos/docker-ce.repo
+      sudo yum install -y docker-ce
+      sudo systemctl start docker
+    #+END_SRC
+  - recommended: add user to docker group:
+    - ~sudo usermod -a -G docker $USER~
+    - relog
+    - optional Docker hello world (run with ~C-c C-c~)
+      #+BEGIN_SRC sh  :results verbatim
+	docker run hello-world
+      #+END_SRC
+
+* Dev Directories
+  If you haven't done it yourself already, the following clones the
+  manylinux Git repository and sets up the expected directory
+  structure.
+  #+BEGIN_SRC sh  :results verbatim
+    mkdir -p ~/dev{1,2,3}
+    cp ../step-1-manylinux2010-docker-images/README.org ~/dev1/
+    cp -R ../step-2-backports/ ~/dev2/
+    cp ../step-3-kivy-almost-manylinux/README.org ~/dev3/
+    git clone https://github.com/dolang/manylinux ~/dev1/manylinux2010
+    echo done.
+  #+END_SRC
+
+  After that, the directories should look something like this:
+  #+BEGIN_EXAMPLE
+    .
+    ├── dev1
+    │   ├── manylinux2010
+    │   │   ├── ...
+    │   │   ├── ...
+    :   :   :
+    │   └── README.org
+    ├── dev2
+    │   ├── RPMS
+    │   │   └── ...
+    │   ├── SRPMS
+    │   │   ├── ...
+    │   │   ├── ...
+    :   :   :
+    │   └── README.org
+    ├── dev3
+    :   └── README.org
+  #+END_EXAMPLE
+
+  You are now ready for step 1.  Open the =README.org= files in turn for
+  each step and follow the instructions.  Good luck and go grab yourself
+  a coffee, it'll take a while. ;)
