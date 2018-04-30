@@ -1,12 +1,13 @@
-# -*- org-confirm-babel-manylinux -*-
+# -*- org-confirm-babel-evaluate: nil; -*-
 #+STARTUP: indent
 
-* About
+* About almost-manylinux
 "/Uh what, why does it say almost?/"
 
 According to the manylinux2010 standard ([[https://www.python.org/dev/peps/pep-0571/][PEP 571]]), the produced wheels
-have to be compiled against a specific version of =glibc= and only have
-a small set of outside dependencies.
+have to be compiled against a specific version of =glibc= and may only
+have a small set of outside dependencies.  Everything else has to be
+included.
 
 The first condition is already met with the manylinux2010 Docker images.
 
@@ -14,8 +15,9 @@ However, the dependencies (backports) are not quite ready yet.  They're
 good enough for a build but need to be replaced by the distro's own
 binaries.
 
-So you'll have to install the SDL2 depencies through your package
-manager first before you can install the wheels.
+So once you're done with the binary wheel builds you'll still have to
+install the SDL2 dependencies through your package manager before you
+can install the wheels.
 
 #+BEGIN_EXAMPLE
   # e.g. Ubuntu 18.04
@@ -32,8 +34,9 @@ manager first before you can install the wheels.
   -- some dude
 #+END_QUOTE
 
-- First, copy the backports here, so they can be made available in the
-  Docker container.
+- First, copy the backports here, so they're available in the Docker
+  container.
+- *Note:* only x86_64 versions are included at the moment.
   #+BEGIN_SRC sh  :results drawer
     mkdir -p io
     DEPS="\
@@ -49,7 +52,7 @@ manager first before you can install the wheels.
         SDL2_ttf-devel-2.0.14-2.el6.x86_64.rpm"
     
     for DEP in $DEPS; do
-        if [ ! -f $DEP ]; then
+        if [ ! -f io/$DEP ]; then
             cp ~/dev2/RPMS/x86_64/$DEP io/
         fi
     done
@@ -57,13 +60,14 @@ manager first before you can install the wheels.
   #+END_SRC
 
 - tangle, ~chmod +x ...~ and run the following script
-- this spins up an interactive docker container:
-  #+BEGIN_SRC sh  :tangle io/docker-run.sh
+- this spins up an interactive Docker container:
+  #+BEGIN_SRC sh  :tangle docker-run-x86_64.sh
+    #!/bin/bash
     # - expects the `${USERNAME}/manylinux2010_x86_64` Docker image to be
     #   present
     # - can have an optional argument which will serve as suffix to the
     #   container name
-    
+    set -e -x
     pushd io/
     SUFFIX=$1
     docker run -it -v $(pwd):/io \
@@ -72,16 +76,33 @@ manager first before you can install the wheels.
     popd
   #+END_SRC
 
-- tangle, ~chmod +x~ and run *inside the container*
-  #+BEGIN_SRC sh  :tangle io/build-almost-manylinux.sh
+- *optional:* same as above, but with the i686 docker image, in case you
+  need 32 bit wheels (tangle this):
+  #+BEGIN_SRC sh  :tangle docker-run-i686.sh
     #!/bin/bash
+    # - expects the `${USERNAME}/manylinux2010_i686` Docker image to be
+    #   present
+    # - can have an optional argument which will serve as suffix to the
+    #   container name
+    set -e -x
+    pushd io/
+    SUFFIX=$1
+    docker run -it -v $(pwd):/io \
+        --name almost_manylinux_32bit${SUFFIX:+_$SUFFIX} \
+        ${USERNAME}/manylinux2010_i686 bash
+    popd
+  #+END_SRC
 
-    set -x
-
+- tangle, ~chmod +x~ and run *inside the container*
+  #+BEGIN_SRC sh  :tangle io/build-kivy-almost-manylinux.sh
+    #!/bin/bash
+    
+    set -x  # not all versions build with all Pythons, don't add -e
+    
     pushd /io
     yum localinstall -y \
         libxkbcommon-0.7.1-1.el6.x86_64.rpm \
-        libxkbcommon-0.7.1-1.el6.x86_64.rpm \
+        libxkbcommon-devel-0.7.1-1.el6.x86_64.rpm \
         SDL2-2.0.3-9.el6.x86_64.rpm \
         SDL2-devel-2.0.3-9.el6.x86_64.rpm \
         SDL2_image-2.0.1-2.el6.x86_64.rpm \
@@ -102,22 +123,42 @@ manager first before you can install the wheels.
     for V in $VERSIONS; do
         tar xf "kivy-${V}.tar"
     done
-    echo Cython==0.23.1 > 1.9.1/dev-requirements.txt
-    echo Cython==0.25.2 > 1.10.0/dev-requirements.txt
-    echo Cython==0.27.3 > 1.10.1.dev0/dev-requirements.txt
+    echo Cython==0.23.1 > kivy-1.9.1/dev-requirements.txt
+    echo Cython==0.25.2 > kivy-1.10.0/dev-requirements.txt
+    echo Cython==0.27.3 > kivy-1.10.1.dev0/dev-requirements.txt
+    
+    cat <<EOF | tee -a /io/wheel_build.log
+    
+    
+    ========================================================================
+          $(date) -- starting Kivy wheel builds
+    ========================================================================
+    
+    EOF
+    
+    building_wheel () {
+    cat <<EOF | tee -a /io/wheel_build.log
+    
+    ------------------------------------------------------------------------
+     Building Kivy v$V wheel with $PIP
+    ------------------------------------------------------------------------
+    EOF
+    }
+    
     for V in $VERSIONS; do
         pushd "kivy-${V}"
         for PIP in /opt/python/*/bin/pip; do
             "$PIP" install -Ur dev-requirements.txt
-            echo ------------------------------------------------------------------------
-            echo Building Kivy v$V wheel with \'$PIP\'
-            echo ------------------------------------------------------------------------
-            "$PIP" wheel . -w /io/wheelhouse | tee >> /io/wheel_build.log
+            building_wheel
+            "$PIP" wheel . -w /io/wheelhouse | tee -a /io/wheel_build.log
         done
         popd
     done
-
+    
     popd 
+  #+END_SRC
+  #+BEGIN_SRC sh  :results silent
+    chmod +x io/build-kivy-almost-manylinux.sh
   #+END_SRC
 
 - you may want to fix permissions after it's done, e.g.:
@@ -165,3 +206,33 @@ http://...:3141 (the former will replace PyPI, the latter will use
 both).  E.g.:
 
 : pip install --extra-index-url http://my-devpi:3141 --trusted-host my-devpi -U kivy==1.10.1.dev0
+
+** TODO pmpi
+[not ready. CentOS 7 doesn't have a py3.5 package]
+
+The Poor Man's Package Index (/pmpi/) is a small Python script which
+produces a [[https://www.python.org/dev/peps/pep-0503/][PEP 503]] compatible directory structure and HTML5 index files
+from a directory containing wheels.  PEP 503 defines the repository API
+of a package index.
+
+That is, if after using /pmpi/ you run a web server from the wheel
+directory, you can target it with pip and it'll serve as your private
+little package index.
+
+Combined with Python's built-in HTTP server, you can have that up
+immediately.  The only requirement is to have py3.5+ installed, because
+I haven't bothered to make it more compatible (yet).
+
+[TODO: is py3.5 available from EPEL?]
+
+Tangle and run the following:
+#+BEGIN_SRC sh  :tangle run-pmpi.sh
+  #!/bin/bash
+  
+  set -e -x
+  
+  pushd io/wheelhouse
+  python3.5 -m ../../scripts/pmpi
+  python3.5 -m http.server
+  popd
+#+END_SRC

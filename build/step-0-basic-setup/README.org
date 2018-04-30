@@ -13,12 +13,16 @@
   - restart
   - basic dev tools: ~sudo yum groupinstall -y 'Development Tools'~
   - editors: ~sudo yum install -y emacs vim~
-    - if you're going to use Emacs, customise the configuration as
-      explained in the [[../README.md][main README]] now (see "... add some generally
-      useful defaults ..."), then restart Emacs.
-    - afterwards, reopen this file in Emacs (~C-x C-f ...~)
-      - the first time you do this with a comment like the one at the
-        top you'll get a security warning.  press "!" to silence that.
+  - if you're going to use Emacs:
+    - customise the configuration as explained in the [[../README.md][main README]] now
+      (see "... add some generally useful defaults ..."), then restart
+      Emacs.
+    - Afterwards, reopen this file in Emacs (~C-x C-f ...~).
+      - The first time you do this with a comment like the one at the
+        top you'll get a security warning.  Press "!" to silence that.
+  - If you *don't* use Emacs, note that some script blocks are meant to
+    be written into separate files (Org Mode calls that /tangle/).  They
+    should all have a shebang ~#!/bin/bash~, that's how you'll know.
 
 ** Virtualbox guest additions:
    - insert guest additions ISO
@@ -37,7 +41,7 @@
          was written; if so, the script will tell you what you have to
          install instead
        - new kernels and new Virtualbox versions require a fresh
-	 installation of the guest additions
+         installation of the guest additions
 
 * Docker
   - install & start (tangle, then run)
@@ -59,14 +63,15 @@
 
 * Dev Directories
   If you haven't done it yourself already, the following clones the
-  manylinux Git repository and sets up the expected directory
-  structure.
+  manylinux Git repository and sets up the expected directory structure.
   #+BEGIN_SRC sh  :results verbatim
     mkdir -p ~/dev{1,2,3}
     cp ../step-1-manylinux2010-docker-images/README.org ~/dev1/
-    cp -R ../step-2-backports/ ~/dev2/
-    cp ../step-3-kivy-almost-manylinux/README.org ~/dev3/
-    git clone https://github.com/dolang/manylinux ~/dev1/manylinux2010
+    cp -R ../step-2-backports/* ~/dev2/
+    cp -R ../step-3-kivy-almost-manylinux/* ~/dev3/
+    if [ ! -d ~/dev1/manylinx2010 ]; then
+        git clone https://github.com/dolang/manylinux ~/dev1/manylinux2010
+    fi
     echo done.
   #+END_SRC
 
@@ -88,9 +93,20 @@
     :   :   :
     │   └── README.org
     ├── dev3
+    │   ├── scripts
+    │   │   ├── ...
+    │   │   ├── ...
     :   └── README.org
   #+END_EXAMPLE
 
-  You are now ready for step 1.  Open the =README.org= files in turn for
-  each step and follow the instructions.  Good luck and go grab yourself
-  a coffee, it'll take a while. ;)
+  You are now ready for step 1.  Open each =README.org= file in turn and
+  follow the instructions.  Good luck and go grab yourself a coffee,
+  it'll take a while. ;)
+
+  =README.org= Links:
+
+  | Repository            | Local                  |
+  |-----------------------+------------------------|
+  | [[../step-1-manylinux2010-docker-images/README.org][step 1: manylinux2010]] | [[file:~/dev1/README.org]] |
+  | [[../step-2-backports/README.org][step 2: backports]]     | [[file:~/dev2/README.org]] |
+  | [[../step-3-kivy-almost-manylinux/README.org][step 3: Kivy wheels]]   | [[file:~/dev3/README.org]] |

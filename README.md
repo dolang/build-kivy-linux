@@ -6,7 +6,8 @@ Things may break for any or no reason at all.  Be sure to specific
 hashes of master if you want to reuse/build on this repository in any
 fashion.
 
-To get started, have a look at the readme in the build subdirectory.
+To get started, have a look at the [readme](build/README.md) in the
+build subdirectory.
 
 
 ## Licenses

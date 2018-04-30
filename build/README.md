@@ -1,11 +1,15 @@
 # Getting Started
 All of this is still a work in progress and subject to change, so if you
-want to follow and compile all the steps yourself, it's best to just
-copy the setup I've prepared:
+want to follow and compile all the steps yourself, it's probably best to
+just copy the setup I've prepared.
 
-- Create a [CentOS 7]([http://isoredirect.centos.org/centos/7/isos/x86_64/)
+That is, it's not a requirement to use CentOS 7 or even a VM, most of
+the interesting stuff happens inside a CentOS 6 Docker image.  But the
+following is tested by me.
+
+- Create a [CentOS 7](http://isoredirect.centos.org/centos/7/isos/x86_64/)
   VM.  I'm using KDE, but that (hopefully) shouldn't matter for these
-  build instructions. aaa
+  build instructions.
 
 - Your login account's name will be used as the first part of the docker
   images, so pick a name accordingly (or modify the script).
@@ -21,6 +25,15 @@ Not everything in there will be applicable to your environment, but it
 contains instructions for the developer tools, and in later steps you're
 expected to have those installed.  Also, there's a script to set up the
 files & folders in a reasonable manner.
+
+Project organisation overview:
+
+| Topic                        | build/ Subfolder                   | Target  |
+|------------------------------|------------------------------------|---------|
+| Setting it up locally        | step-0-basic-setup                 | &mdash; |
+| manylinux2010 Docker images  | step-1-manylinux2010-docker-images | ~/dev1  |
+| CentOS 6 RPM backports       | step-2-backports                   | ~/dev2  |
+| Kivy almost-manylinux builds | step-3-kivy-almost-manylinux       | ~/dev3  |
 
 
 ### Tips:
@@ -40,7 +53,7 @@ keep notes of everything.  It's not necessary to use Emacs at all, but
 it might be easier to run things from within Emacs instead of
 copy-pasting.  The code blocks `#+BEGIN_SRC ...` can be used directly.
 
-If you're unfamiliar with Emacs, here's how to do it:
+If you're unfamiliar with Emacs, here's how to use it:
 
 - key explanation:
   - `S-...` = Shift + ...
@@ -51,48 +64,50 @@ If you're unfamiliar with Emacs, here's how to do it:
   - `M-: (find-file user-init-file)`
   - now paste the following:
     ```elisp
-	;; Org Babel: load languages
-	;; may vary slightly with different versions of Org
-	(org-babel-do-load-languages
-	 'org-babel-load-languages
-	 '((emacs-lisp . t)
-	   (python . t)
-	   (sh . t)))
-    
-	;; backup creation config: among others, save in ~/.emacs.d/ subfolder
-	;; instead of clobbering the working directory
-	(setq backup-directory-alist '(("." . "~/.emacs.d/backup"))
-		  backup-by-copying t
-		  version-control t
-		  kept-new-versions 20
-		  kept-old-versions 0
-		  delete-old-versions t
-		  vc-make-backup-files t)
-    
-	(defun backup-each-save ()
-	  (setq buffer-backed-up nil))
-    
-	(add-hook 'before-save-hook 'backup-each-save)
-    
-	;; use UTF-8 by default
-	(setq utf-translate-cjk-mode nil) ; disable CJK coding/encoding (Chinese/Japanese/Korean characters)
-	(set-language-environment 'utf-8)
-	(setq locale-coding-system 'utf-8)
-	(set-default-coding-systems 'utf-8)
-	(set-terminal-coding-system 'utf-8)
-	(prefer-coding-system 'utf-8)
-    
-	;; always show column number in status bar
-	(column-number-mode)
+    ;; Org Babel: load languages
+    ;; may vary slightly with different versions of Org
+    (org-babel-do-load-languages
+     'org-babel-load-languages
+     '((emacs-lisp . t)
+       (python . t)
+       (sh . t)))
+
+    ;; backup creation config: among others, save in ~/.emacs.d/ subfolder
+    ;; instead of clobbering the working directory
+    (setq backup-directory-alist '(("." . "~/.emacs.d/backup"))
+          backup-by-copying t
+          version-control t
+          kept-new-versions 20
+          kept-old-versions 0
+          delete-old-versions t
+          vc-make-backup-files t)
+
+    (defun backup-each-save ()
+      (setq buffer-backed-up nil))
+
+    (add-hook 'before-save-hook 'backup-each-save)
+
+    ;; use UTF-8 by default
+    (setq utf-translate-cjk-mode nil) ; disable CJK coding/encoding (Chinese/Japanese/Korean characters)
+    (set-language-environment 'utf-8)
+    (setq locale-coding-system 'utf-8)
+    (set-default-coding-systems 'utf-8)
+    (set-terminal-coding-system 'utf-8)
+    (prefer-coding-system 'utf-8)
+
+    ;; always show column number in status bar
+    (column-number-mode)
     ```
 - notable **Org Mode** key sequences:
   - `S-<tab>` 3 times to expand all sections
   - with the *point* (that's Emacs' name for the cursor) in a code block
-	with `:tangle ...`
-    - `C-u C-c C-v C-t` to create a script file
-    - or `C-c C-v C-t` to create files for all code blocks in current buffer
+    with `:tangle ...`
+    - `C-u C-c C-v C-t` to create a script file (yes, in Emacs Org Mode
+      that's called to *tangle* for some reason)
+    - or `C-c C-v C-t` to create files for all code blocks in current
+      buffer
   - in other code blocks:
-	- `C-c C-c` to run it
+    - `C-c C-c` to run it
     - `C-c '` to edit the source in a dedicated buffer for that language
 - most important general key sequences:
   - pressed something wrong and want to get out: `C-g` (repeatedly if
@@ -103,7 +118,7 @@ If you're unfamiliar with Emacs, here's how to do it:
   - start selection: `C-<space>`
   - select a block: `M-h` (repeat to widen)
   - to easily modify a selection both ways you can `C-x C-x` to switch
-	the *point* between start and end
+        the *point* between start and end
   - copy: `M-w`
   - cut: `C-w`
   - paste: `C-y`

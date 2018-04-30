@@ -11,12 +11,23 @@ repository's master branch.  Just run:
 you may want to reset those changes afterwards.  The script itself
 contains an explanation.
 
-* If you're new to Docker...
-- It's probably best to familiarise yourself with Docker beforehand
-  and do the [[https://docs.docker.com/get-started/][tutorials]], they're quite good.
+* About the images
+Three images are produced by the build script.  The one which ends in
+=_centos-6.9-no-vsyscall= serves only as a dependency for the =x86_64=
+variant [fn:1].  The Docker images =manylinux2010_i686= and
+=manylinux2010_x86_64= have the necessary environment to produce
+compatible wheels and contain CPython interpreters for v2.7, v3.3, v3.4,
+v3.5 and v3.6 [fn:2].  These are installed in =/opt/python/= subfolders.
+
+Due to technical restrictions they are not suited to compile binaries
+which depend on the most recent C++ standards [fn:3].
+
+* If you're new to Docker
+- It's probably best to familiarise yourself with Docker and work
+  through the [[https://docs.docker.com/get-started/][tutorials]].  They are quite good.
 - However, if you're just interested in the produced manylinux2010
   images, the following two commands are an easy way to get some
-  status information (the second may take a while):
+  status information (the second may take a short while):
   #+BEGIN_SRC sh  :results drawer
     docker image ls
   #+END_SRC
@@ -30,3 +41,17 @@ contains an explanation.
 - To free space after builds, you can remove obsolete images with
   ~docker image rm <name-or-id>~ and containers with ~docker rm
   <name-or-id>~.  Tab-completion is supported, too.
+
+
+* Footnotes
+
+[fn:1] See [[https://www.python.org/dev/peps/pep-0571/#compatibility-with-kernels-that-lack-vsyscall][this section in PEP 571]] for a detailed explanation on why
+this is necessary.
+
+[fn:2] Note: =manylinux2010/docker/build_scripts/build_env.sh= contains
+more detailed version information.  v3.3 is outdated and will soon be
+removed, while v3.7 is due to be released in a few months' time.
+
+[fn:3] The original pull request from [[https://github.com/pypa/manylinux/pull/152][markrwilliams:manylinux2]]  has
+a discussion/a few pointers on why that is the case.
+
